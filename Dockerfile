@@ -41,6 +41,7 @@ RUN set -eux; \
 # -------- RUNTIME STAGE --------
 FROM debian:bookworm-slim
 ARG TARGETARCH
+ARG S6_VERSION=v3.2.1.0
 
 LABEL maintainer="Maxence Winandy <maxence.winandy@digital-drive.io>"
 
@@ -55,9 +56,20 @@ RUN set -eux; \
 
 COPY --from=build /var/cache/squid-install/usr /usr
 
-RUN mkdir -p /var/spool/squid /var/log/squid /var/run/squid/ && \
-    chown -R proxy:proxy /var/spool/squid /var/log/squid /var/run/squid
+RUN set -eux; \
+    case "$TARGETARCH" in \
+        amd64) S6_ARCH=amd64 ;; \
+        arm64) S6_ARCH=aarch64 ;; \
+        *) echo "unsupported TARGETARCH=$TARGETARCH"; exit 1 ;; \
+    esac; \
+    wget "https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.gz" -O /tmp/s6-overlay.tar.gz; \
+    tar xzf /tmp/s6-overlay.tar.gz -C /; \
+    rm /tmp/s6-overlay.tar.gz
 
-USER proxy
+COPY rootfs/ /
 
-CMD ["/usr/sbin/squid", "-h"]
+RUN mkdir -p /var/spool/squid /var/log/squid /var/run/squid \
+    && chown -R proxy:proxy /var/spool/squid /var/log/squid /var/run/squid \
+    && chmod +x /etc/services.d/squid/run /etc/services.d/squid/log/run
+
+ENTRYPOINT ["/init"]

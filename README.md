@@ -18,7 +18,9 @@ feature-rich compiler flags such as TLS and ECAP support.
   libraries Squid actually needs (`libssl3`, `libecap3`).
 - Runs Squid in the foreground (`-N`) so Docker sees real process restarts.
 - Mounts-friendly: configuration, cache, and log directories can all be
-  persisted easily.
+  persisted easily, and Squid is supervised via `s6` so PID/log directories are
+  pre-warmed and the process restarts cleanly. The `rootfs/etc/services.d`
+  tree defines the supervisor scripts and ships with `s6-overlay v3.2.1.0`.
 
 ## Quick Start
 

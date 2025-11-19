@@ -18,8 +18,9 @@ helpers (`--enable-ecap`).
 | Build base   | `debian:bookworm` with `build-essential`, `pkg-config`, `wget`, and Squid deps                                                                                                               |
 | Build steps  | For `linux/amd64`, downloads `squid-6.14.tar.bz2` from `https://github.com/squid-cache/squid/releases/download/SQUID_6_14/` into `/var/cache/squid-build`, verifies SHA256, runs `./configure --prefix=/usr --localstatedir=/var --libexecdir=/usr/lib/squid --enable-ssl --enable-ecap` (with `CFLAGS=CXXFLAGS=-march=x86-64 -mtune=generic`), then `make && make install DESTDIR=/var/cache/squid-install`. Other architectures skip the source build so the runtime stage can install Debian's prebuilt `squid`. |
 | Runtime base | `debian:bookworm-slim` to keep the final image small                                                                                                                                         |
-| Runtime deps | `libssl3`, `libecap3` installed via `apt`                                                                                                                                                    |
-| Files copied | `/var/cache/squid-install/usr` (includes `/usr/etc`, `/usr/lib`, etc.) for `amd64`; other architectures use the Debian `squid` package instead.                                                                                                                                  |
+| Runtime deps | `libssl3`, `libecap3` installed via `apt`; non-`amd64` also get Debian’s `squid`.                                                                                                            |
+| Supervision  | `s6-overlay v3.2.1.0` plus `rootfs/etc/services.d/squid` run/log scripts ensure Squid runs under `/init`.                                                                                       |
+| Files copied | `/var/cache/squid-install/usr` (includes `/usr/etc`, `/usr/lib`, etc.) for `amd64`; other architectures use the Debian `squid` package instead.                                                                                                                    |
 | Entry point  | `CMD ["/usr/sbin/squid", "-N", "-d1"]`                                                                                                                                                       |
 | Ports        | `3128/tcp` (proxy)                                                                                                                                                                           |
 | Volumes      | `/var/cache/squid` (cache), `/var/log/squid` (logs)                                                                                                                                          |
@@ -42,9 +43,11 @@ The image does not honor any environment variables; configuration remains fully 
 ## 4. Runtime Behaviour
 
 1. During container startup, Squid ensures cache/log directories exist and have
-   correct permissions for the `proxy` user.
+   correct permissions for the `proxy` user (the S6 service also owns
+   `/var/run/squid` so PID files stay writable).
 2. Squid runs in no-daemon mode (`-N`), emitting logs to stdout/stderr for
-   orchestration visibility, while Docker supervises the process lifetime.
+   orchestration visibility while the `s6-overlay` supervisor (`/init`) keeps the
+   process alive and manages restarts.
 3. Non-`amd64` targets skip the source build and simply install Debian's `squid`
    package inside the runtime image so the proxy is still available on those
    platforms without rebuilding inside QEMU.

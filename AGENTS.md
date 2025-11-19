@@ -30,7 +30,10 @@ Bookworm-slim base without forcing users to compile Squid themselves.
   under `/usr/etc`) from the build stage (built under `/var/cache/squid-install`)
   into the final image; cache/log directories are created at runtime. On
   non-`amd64` targets the stage installs Debian's `squid` package so the runtime
-  still ships the proxy without needing to copy missing build artifacts.
+  still ships the proxy without needing to copy missing build artifacts. The
+  runtime stage also deploys `s6-overlay v3.2.1.0`, copies the `rootfs/etc/services.d/squid`
+  definition (run/log scripts), and runs via `/init` so PID/log dirs are owned by
+  `proxy`.
 - Creates `/var/spool/squid` and `/var/log/squid`, ensures `proxy:proxy`
   ownership, and runs as the unprivileged `proxy` user.
 - Command: `CMD ["/usr/sbin/squid", "-N", "-d1"]` keeps Squid running in the

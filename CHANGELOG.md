@@ -7,6 +7,9 @@
 - Build stage now compiles Squid only for `linux/amd64`; other targets rely on
   Debian's packaged `squid` in the runtime image so multi-arch builds avoid
   expensive QEMU compilations.
+- Runtime stage deploys `s6-overlay v3.2.1.0`, copies the `rootfs/etc/services.d/squid`
+  run/log scripts, and owns `/var/run/squid`/logs so PID files and log rotation
+  behave cleanly under container orchestrators.
 
 ## [0.4.1] - 2025-11-19
 

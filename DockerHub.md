@@ -3,9 +3,10 @@
 Multi-stage Squid 6 build: the first stage compiles Squid 6.14 from the GitHub
 `SQUID_6_14` release (downloaded as `squid-6.14.tar.bz2` and verified via SHA256)
 on `debian:bookworm`, the second packages the binaries on `debian:bookworm-slim`
-with minimal runtime dependencies. Non-`amd64` targets skip the source build and
-install Debian's `squid` package instead so the platform gains a working proxy
-without overflowing the QEMU builder.
+with minimal runtime dependencies. The runtime image ships `s6-overlay v3.2.1.0`
+plus the `rootfs/etc/services.d/squid` supervision scripts so Squid runs under
+`/init` with PID/log dirs owned by `proxy`. Non-`amd64` targets skip the source
+build and install Debian's `squid` package instead of compiling inside QEMU.
 
 ## Highlights
 
