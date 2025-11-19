@@ -1,0 +1,4 @@
+#!/usr/bin/execlineb -P
+with-contenv
+  s6-setuidgid proxy
+  exec squid -f /etc/squid/squid.conf -N -P /var/run/squid/squid.pid

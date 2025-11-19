@@ -1,0 +1,3 @@
+#!/usr/bin/execlineb -P
+s6-setuidgid proxy
+exec s6-log n2 s1000000 /var/log/squid
