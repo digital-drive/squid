@@ -55,8 +55,8 @@ RUN set -eux; \
 
 COPY --from=build /var/cache/squid-install/usr /usr
 
-RUN mkdir -p /var/spool/squid /var/log/squid && \
-    chown -R proxy:proxy /var/spool/squid /var/log/squid
+RUN mkdir -p /var/spool/squid /var/log/squid /var/run/squid/ && \
+    chown -R proxy:proxy /var/spool/squid /var/log/squid /var/run/squid
 
 USER proxy
 
