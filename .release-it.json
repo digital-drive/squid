@@ -1,0 +1,22 @@
+{
+  "git": {
+    "requireCleanWorkingDir": true,
+    "commit": true,
+    "commitMessage": "chore(release): ${version}",
+    "tag": true,
+    "tagName": "v${version}",
+    "push": true
+  },
+  "github": false,
+  "gitlab": {
+    "release": true,
+    "assets": []
+  },
+  "npm": false,
+  "hooks": {
+    "before:init": "git pull --rebase",
+    "after:bump": "npx conventional-changelog -p angular -i CHANGELOG.md -s --no-linkify && sed -i '/^\\* chore:/d' CHANGELOG.md && code -w CHANGELOG.md && git add CHANGELOG.md",
+    "before:release": "bash scripts/publish-images.sh ${version}",
+    "after:release": "echo \"Release ${version} done on GitLab\""
+  }
+}
