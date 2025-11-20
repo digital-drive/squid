@@ -1,3 +1,4 @@
 #!/command/execlineb -P
 with-contenv
-exec /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -N
+# Run Squid in foreground with light verbosity so Docker/s6 capture logs.
+exec /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -N -d1

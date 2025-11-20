@@ -16,7 +16,7 @@ feature-rich compiler flags such as TLS and ECAP support.
   remains lightweight.
 - Runtime stage is based on `debian:bookworm-slim` and carries only the
   libraries Squid actually needs (`libssl3`, `libecap3`).
-- Runs Squid in the foreground (`-N`) so Docker sees real process restarts.
+- Runs Squid in the foreground (`-N`) and keeps level-1 debugging enabled (`-d1`) so Docker supervises it directly while still surfacing useful log lines.
 - Mounts-friendly: configuration, cache, and log directories can all be
   persisted easily, and Squid is supervised via `s6` so PID/log directories are
   pre-warmed and the process restarts cleanly. The `rootfs/etc/services.d`
@@ -67,13 +67,13 @@ docker exec squid squid -k reconfigure
 
 ## Configuration & Persistence
 
-| Aspect              | Recommendation                                                           |
-|---------------------|--------------------------------------------------------------------------|
-| Listening port      | Publish `3128/tcp` so workloads can reach the proxy.                     |
-| Squid configuration | Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`. |
-| Cache directory     | Persist `/var/cache/squid` to warm caches between container restarts.      |
-| Logs                | Mount `/var/log/squid` if host-level log shipping or inspection is needed (also streamed via `docker logs`). |
-| Reload control      | Use `squid -k reconfigure` inside the container to apply config changes.   |
+| Aspect              | Recommendation                                                                                                     |
+|---------------------|--------------------------------------------------------------------------------------------------------------------|
+| Listening port      | Publish `3128/tcp` so workloads can reach the proxy.                                                               |
+| Squid configuration | Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`.                                           |
+| Cache directory     | Persist `/var/cache/squid` to warm caches between container restarts.                                              |
+| Logs                | Mount `/var/log/squid` if host-level log shipping or inspection is needed (also streamed via `docker logs`).       |
+| Reload control      | Use `squid -k reconfigure` inside the container to apply config changes (the bundled service runs `squid -N -d1`). |
 
 There are no runtime environment variables; configure Squid via its native
 file-based syntax so you retain the full power of ACLs, caching, and helpers.

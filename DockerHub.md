@@ -17,7 +17,7 @@ build and install Debian's `squid` package instead of compiling inside QEMU.
   binary, enabling the multi-arch manifest without unhappy QEMU runs.
 - Runtime stage copies the compiled `/usr` and `/var` trees into a slim Debian
   image, installs `libssl3` and `libecap3`, and runs Squid as the `proxy` user.
-- Ports: `3128/tcp` for the proxy; Squid stays in the foreground (`-N -d1`).
+- Ports: `3128/tcp` for the proxy; the bundled service runs Squid with `-N -d1` so Docker sees real restarts and still captures log output.
 
 ## Usage
 
