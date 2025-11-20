@@ -47,7 +47,7 @@ LABEL maintainer="Maxence Winandy <maxence.winandy@digital-drive.io>"
 
 RUN set -eux; \
     apt-get update; \
-    pkg_list="libssl3 libecap3"; \
+    pkg_list="libssl3 libecap3 wget"; \
     if [ "$TARGETARCH" != "amd64" ]; then \
         pkg_list="$pkg_list squid"; \
     fi; \
