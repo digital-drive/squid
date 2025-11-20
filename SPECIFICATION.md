@@ -21,7 +21,7 @@ helpers (`--enable-ecap`).
 | Runtime deps | `libssl3`, `libecap3` installed via `apt`; non-`amd64` also get Debian’s `squid`.                                                                                                            |
 | Supervision  | `s6-overlay v3.2.1.0` plus `rootfs/etc/services.d/squid` run/log scripts ensure Squid runs under `/init`.                                                                                       |
 | Files copied | `/var/cache/squid-install/usr` (includes `/usr/etc`, `/usr/lib`, etc.) for `amd64`; other architectures use the Debian `squid` package instead.                                                                                                                    |
-| Entry point  | `CMD ["/usr/sbin/squid", "-N", "-d1"]`                                                                                                                                                       |
+| Entry point  | `ENTRYPOINT ["/init"]` (with `s6-overlay` launching Squid via `rootfs/etc/services.d/squid`)                                                                                                                                        |
 | Ports        | `3128/tcp` (proxy)                                                                                                                                                                           |
 | Volumes      | `/var/cache/squid` (cache), `/var/log/squid` (logs)                                                                                                                                          |
 
@@ -35,7 +35,7 @@ variance.
 | `squid.conf` override | Replace `/etc/squid/squid.conf` with a bind-mounted file to control ACLs, cache directives, etc. |
 | Drop-in snippets      | Mount files under `/etc/squid/conf.d/*.conf`; they are appended after the main config.           |
 | Cache persistence     | Mount `/var/cache/squid` and ensure Squid owns the directory before starting.                    |
-| Log persistence       | Mount `/var/log/squid` to retain access/cache logs outside the container.                        |
+| Log persistence       | Mount `/var/log/squid` to retain access/cache logs outside the container (the same streams appear via `docker logs`). |
 | Reload control        | Run `docker exec <name> squid -k reconfigure` to apply config changes without a restart.         |
 
 The image does not honor any environment variables; configuration remains fully file-driven to preserve Squid semantics.
@@ -43,11 +43,11 @@ The image does not honor any environment variables; configuration remains fully 
 ## 4. Runtime Behaviour
 
 1. During container startup, Squid ensures cache/log directories exist and have
-   correct permissions for the `proxy` user (the S6 service also owns
+   correct permissions for the `proxy` user (the `s6` init hook also owns
    `/var/run/squid` so PID files stay writable).
-2. Squid runs in no-daemon mode (`-N`), emitting logs to stdout/stderr for
-   orchestration visibility while the `s6-overlay` supervisor (`/init`) keeps the
-   process alive and manages restarts.
+2. Squid runs in no-daemon mode (`-N`) while `s6-log` mirrors the access/cache
+   files under `/var/log/squid` to stdout, giving both durable files and
+   `docker logs` visibility as `/init` keeps the process alive and manages restarts.
 3. Non-`amd64` targets skip the source build and simply install Debian's `squid`
    package inside the runtime image so the proxy is still available on those
    platforms without rebuilding inside QEMU.

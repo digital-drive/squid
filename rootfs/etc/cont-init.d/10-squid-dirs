@@ -2,9 +2,9 @@
 set -eu
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-mkdir -p /var/spool/squid /var/log/squid /var/run/squid /var/logs
-touch /var/logs/cache.log /var/logs/access.log
-chown -R proxy:proxy /var/spool/squid /var/log/squid /var/logs
+mkdir -p /var/spool/squid /var/log/squid /var/run/squid
+touch /var/log/squid/cache.log /var/log/squid/access.log
+chown -R proxy:proxy /var/spool/squid /var/log/squid
 chown proxy:proxy /var/run/squid
 
 if [ ! -d /var/spool/squid/00 ] || [ -z "$(ls -A /var/spool/squid/00 2>/dev/null)" ]; then
@@ -12,4 +12,4 @@ if [ ! -d /var/spool/squid/00 ] || [ -z "$(ls -A /var/spool/squid/00 2>/dev/null
     /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -z
 fi
 
-rm -f /var/run/squid/squid.pid
+: >/var/run/squid/squid.pid

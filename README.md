@@ -72,7 +72,7 @@ docker exec squid squid -k reconfigure
 | Listening port      | Publish `3128/tcp` so workloads can reach the proxy.                     |
 | Squid configuration | Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`. |
 | Cache directory     | Persist `/var/cache/squid` to warm caches between container restarts.      |
-| Logs                | Mount `/var/log/squid` if host-level log shipping or inspection is needed. |
+| Logs                | Mount `/var/log/squid` if host-level log shipping or inspection is needed (also streamed via `docker logs`). |
 | Reload control      | Use `squid -k reconfigure` inside the container to apply config changes.   |
 
 There are no runtime environment variables; configure Squid via its native
@@ -84,6 +84,8 @@ file-based syntax so you retain the full power of ACLs, caching, and helpers.
 - Cache logs: `/var/log/squid/cache.log`
 - Manager interface: `docker exec squid squidclient mgr:info`
 
+`docker logs squid` shows the same access/cache log lines because the `s6-log`
+service fans them out to stdout while rotating files under `/var/log/squid`.
 These files can be shipped to your log backend or inspected manually.
 
 ## Development Notes

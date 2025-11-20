@@ -35,7 +35,8 @@ Bookworm-slim base without forcing users to compile Squid themselves.
   definition (run/log scripts), and runs via `/init` so PID/log dirs are owned by
   `proxy`.
 - Creates `/var/spool/squid` and `/var/log/squid`, ensures `proxy:proxy`
-  ownership, and runs as the unprivileged `proxy` user.
+  ownership, streams Squid logs to Docker stdout via `s6-log`, and runs as the
+  unprivileged `proxy` user.
 - Command: `CMD ["/usr/sbin/squid", "-N", "-d1"]` keeps Squid running in the
   foreground so Docker can supervise it directly.
 
@@ -62,8 +63,8 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 
 1. The multi-stage build outputs a Squid install tailored to Debian binaries.
 2. The runtime image runs Squid as `proxy`, exposing `3128/tcp` to the host.
-3. Logs are written under `/var/log/squid` and can be shipped to the host or
-   retained in volumes.
+3. Logs are written under `/var/log/squid`, mirrored to container stdout by
+   `s6-log`, and can be shipped to the host or retained in volumes.
 4. On shutdown, Docker signals Squid which cleans up its cache before exit.
 
 ## Known Limitations

@@ -55,3 +55,5 @@ docker exec squid squid -k reconfigure
   rather than environment variables.
 - TLS interception, authentication helpers, and advanced cachefeatures depend on
   the configuration you mount into the container; they are not baked into the image.
+- Squid writes `access.log` / `cache.log` under `/var/log/squid` and the bundled
+  `s6-log` service mirrors those lines to stdout, so `docker logs` exposes the same stream.

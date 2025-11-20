@@ -99,4 +99,4 @@ RUN set -eux; \
         /etc/services.d/squid/run \
         /etc/services.d/squid/log/run
 
-CMD ["/init"]
+ENTRYPOINT ["/init"]
