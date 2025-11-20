@@ -61,6 +61,14 @@ RUN apt-get update \
       libecap3 \
  && rm -rf /var/lib/apt/lists/*
 
+RUN set -eux; \
+    if ! getent group proxy >/dev/null; then \
+        groupadd -r proxy; \
+    fi; \
+    if ! getent passwd proxy >/dev/null; then \
+        useradd -r -g proxy -s /usr/sbin/nologin proxy; \
+    fi
+
  RUN set -eux; \
     case "${TARGETARCH}" in \
         amd64) S6_ARCH="x86_64" ;; \
@@ -72,6 +80,8 @@ RUN apt-get update \
         "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz"; \
     tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz; \
     tar -C / -Jxpf /tmp/s6-overlay.tar.xz; \
+    chmod 0755 /init; \
+    chmod 0755 /command/s6-setuidgid; \
     rm -f /tmp/s6-overlay-noarch.tar.xz /tmp/s6-overlay.tar.xz
 
 
@@ -79,9 +89,17 @@ COPY --from=build /var/cache/squid-install/usr /usr
 
 COPY rootfs/ /
 
+USER root
+
+RUN set -eux; \
+    install -d -o proxy -g proxy /var/spool/squid /var/log/squid /var/run/squid /var/logs; \
+    touch /var/logs/cache.log /var/logs/access.log; \
+    chown proxy:proxy /var/logs/cache.log /var/logs/access.log; \
+    rm -f /var/run/squid.pid
+
 RUN set -eux; \
     chmod +x \
         /etc/services.d/squid/run \
         /etc/services.d/squid/log/run
 
-#ENTRYPOINT ["/init"]
+ENTRYPOINT ["/init"]
