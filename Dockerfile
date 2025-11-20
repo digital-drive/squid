@@ -42,12 +42,11 @@ RUN set -eux; \
 FROM debian:bookworm-slim
 ARG TARGETARCH
 ARG S6_VERSION=v3.2.1.0
-
 LABEL maintainer="Maxence Winandy <maxence.winandy@digital-drive.io>"
 
 RUN set -eux; \
     apt-get update; \
-    pkg_list="libssl3 libecap3 wget"; \
+    pkg_list="libssl3 libecap3 wget ca-certificates xz-utils"; \
     if [ "$TARGETARCH" != "amd64" ]; then \
         pkg_list="$pkg_list squid"; \
     fi; \
@@ -58,13 +57,13 @@ COPY --from=build /var/cache/squid-install/usr /usr
 
 RUN set -eux; \
     case "$TARGETARCH" in \
-        amd64) S6_ARCH=amd64 ;; \
+        amd64) S6_ARCH=x86_64 ;; \
         arm64) S6_ARCH=aarch64 ;; \
         *) echo "unsupported TARGETARCH=$TARGETARCH"; exit 1 ;; \
     esac; \
-    wget "https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.gz" -O /tmp/s6-overlay.tar.gz; \
-    tar xzf /tmp/s6-overlay.tar.gz -C /; \
-    rm /tmp/s6-overlay.tar.gz
+    wget "https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" -O /tmp/s6-overlay.tar.xz; \
+    tar xf /tmp/s6-overlay.tar.xz -C /; \
+    rm /tmp/s6-overlay.tar.xz
 
 COPY rootfs/ /
 
