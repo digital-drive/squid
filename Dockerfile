@@ -53,12 +53,16 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends $pkg_list; \
     rm -rf /var/lib/apt/lists/*; \
     if [ "$TARGETARCH" = "amd64" ]; then \
-        groupadd --system proxy; \
-        useradd --system -g proxy \
-            -d /var/spool/squid \
-            -s /usr/sbin/nologin \
-            -c "Squid proxy user" \
-            proxy; \
+        if ! getent group proxy > /dev/null 2>&1; then \
+            groupadd --system proxy; \
+        fi; \
+        if ! id -u proxy > /dev/null 2>&1; then \
+            useradd --system -g proxy \
+                -d /var/spool/squid \
+                -s /usr/sbin/nologin \
+                -c "Squid proxy user" \
+                proxy; \
+        fi; \
     fi
 
 COPY --from=build /var/cache/squid-install/usr /usr
