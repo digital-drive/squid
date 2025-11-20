@@ -1,5 +1,7 @@
 #!/usr/bin/execlineb -P
 with-contenv
+  mkdir -p /var/spool/squid /var/log/squid /var/run/squid /var/logs
+  chown -R proxy:proxy /var/spool/squid /var/log/squid /var/run/squid /var/logs
   rm -f /var/run/squid.pid
   s6-setuidgid proxy
   exec squid -f /etc/squid/squid.conf -N

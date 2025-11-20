@@ -68,8 +68,4 @@ RUN set -eux; \
 
 COPY rootfs/ /
 
-RUN mkdir -p /var/spool/squid /var/log/squid /var/run/squid \
-    && chown -R proxy:proxy /var/spool/squid /var/log/squid /var/run/squid \
-    && chmod +x /etc/services.d/squid/run /etc/services.d/squid/log/run
-
 ENTRYPOINT ["/init"]
