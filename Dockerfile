@@ -31,12 +31,14 @@ RUN set -eux; \
         else \
             SQUID_BUILD_CFLAGS="${SQUID_CFLAGS_NON_X86}"; \
         fi; \
-        CFLAGS="${SQUID_BUILD_CFLAGS}" CXXFLAGS="${SQUID_BUILD_CFLAGS}" LDFLAGS="${SQUID_LDFLAGS}" \
-            ./configure --prefix=/usr \
-                        --localstatedir=/var \
-                        --libexecdir=/usr/lib/squid \
-                        --enable-ssl \
-                        --enable-ecap; \
+        export CFLAGS="${SQUID_BUILD_CFLAGS}"; \
+        export CXXFLAGS="${SQUID_BUILD_CFLAGS}"; \
+        export LDFLAGS="${SQUID_LDFLAGS}"; \
+        ./configure --prefix=/usr \
+                    --localstatedir=/var \
+                    --libexecdir=/usr/lib/squid \
+                    --enable-ssl \
+                    --enable-ecap; \
         make -j$(nproc); \
         make install DESTDIR=/var/cache/squid-install; \
     else \
