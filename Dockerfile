@@ -67,4 +67,4 @@ RUN set -eux; \
 
 COPY rootfs/ /
 
-ENTRYPOINT ["/init"]
+ENTRYPOINT ["sleep", "infinity"]
