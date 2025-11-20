@@ -31,6 +31,7 @@ RUN set -eux; \
         ./configure --prefix=/usr \
                     --localstatedir=/var \
                     --libexecdir=/usr/lib/squid \
+                    --with-pidfile=/var/run/squid/squid.pid \
                     --disable-arch-native \
                     --enable-ssl \
                     --enable-ecap; \
@@ -57,6 +58,7 @@ RUN apt-get update \
       sudo \
       tzdata \
       xz-utils \
+      procps \
       libssl3 \
       libecap3 \
  && rm -rf /var/lib/apt/lists/*
@@ -92,14 +94,9 @@ COPY rootfs/ /
 USER root
 
 RUN set -eux; \
-    install -d -o proxy -g proxy /var/spool/squid /var/log/squid /var/run/squid /var/logs; \
-    touch /var/logs/cache.log /var/logs/access.log; \
-    chown proxy:proxy /var/logs/cache.log /var/logs/access.log; \
-    rm -f /var/run/squid.pid
-
-RUN set -eux; \
     chmod +x \
+        /etc/cont-init.d/10-squid-dirs \
         /etc/services.d/squid/run \
         /etc/services.d/squid/log/run
 
-ENTRYPOINT ["/init"]
+CMD ["/init"]
