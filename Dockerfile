@@ -8,7 +8,6 @@ ARG SQUID_VERSION=6.14
 ARG SQUID_TAG=SQUID_6_14
 ARG SQUID_SHA256=cdc6b6c1ed519836bebc03ef3a6ed3935c411b1152920b18a2210731d96fdf67
 ARG SQUID_CFLAGS="-march=x86-64 -mtune=generic -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2"
-ARG SQUID_CFLAGS_NON_X86="-O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2"
 ARG SQUID_LDFLAGS="-Wl,-z,relro,-z,now"
 
 RUN apt-get update \
@@ -20,19 +19,14 @@ RUN apt-get update \
 
 WORKDIR /var/cache/squid-build
 RUN set -eux; \
-    if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "arm64" ]; then \
+    if [ "$TARGETARCH" = "amd64" ]; then \
         wget https://github.com/squid-cache/squid/releases/download/${SQUID_TAG}/squid-${SQUID_VERSION}.tar.bz2; \
         echo "${SQUID_SHA256}  squid-${SQUID_VERSION}.tar.bz2" > squid-${SQUID_VERSION}.tar.bz2.sha256; \
         sha256sum -c squid-${SQUID_VERSION}.tar.bz2.sha256; \
         tar xjf squid-${SQUID_VERSION}.tar.bz2; \
         cd squid-${SQUID_VERSION}; \
-        if [ "$TARGETARCH" = "amd64" ]; then \
-            SQUID_BUILD_CFLAGS="${SQUID_CFLAGS}"; \
-        else \
-            SQUID_BUILD_CFLAGS="${SQUID_CFLAGS_NON_X86}"; \
-        fi; \
-        export CFLAGS="${SQUID_BUILD_CFLAGS}"; \
-        export CXXFLAGS="${SQUID_BUILD_CFLAGS}"; \
+        export CFLAGS="${SQUID_CFLAGS}"; \
+        export CXXFLAGS="${SQUID_CFLAGS}"; \
         export LDFLAGS="${SQUID_LDFLAGS}"; \
         ./configure --prefix=/usr \
                     --localstatedir=/var \
@@ -70,7 +64,6 @@ RUN apt-get update \
  RUN set -eux; \
     case "${TARGETARCH}" in \
         amd64) S6_ARCH="x86_64" ;; \
-        arm64) S6_ARCH="aarch64" ;; \
         *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
