@@ -51,7 +51,15 @@ RUN set -eux; \
         pkg_list="$pkg_list squid"; \
     fi; \
     apt-get install -y --no-install-recommends $pkg_list; \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*; \
+    if [ "$TARGETARCH" = "amd64" ]; then \
+        groupadd --system proxy; \
+        useradd --system -g proxy \
+            -d /var/spool/squid \
+            -s /usr/sbin/nologin \
+            -c "Squid proxy user" \
+            proxy; \
+    fi
 
 COPY --from=build /var/cache/squid-install/usr /usr
 
@@ -67,4 +75,7 @@ RUN set -eux; \
 
 COPY rootfs/ /
 
-ENTRYPOINT ["sleep", "infinity"]
+RUN set -eux; \
+    find /etc/services.d/squid -type f -name run -exec chmod +x {} +
+
+ENTRYPOINT ["/init"]
