@@ -7,9 +7,10 @@ touch /var/log/squid/cache.log /var/log/squid/access.log
 chown -R proxy:proxy /var/spool/squid /var/log/squid
 chown proxy:proxy /var/run/squid
 
+: >/var/run/squid/squid.pid
+chown proxy:proxy /var/run/squid/squid.pid
+
 if [ ! -d /var/spool/squid/00 ] || [ -z "$(ls -A /var/spool/squid/00 2>/dev/null)" ]; then
     echo "[cont-init] Initializing Squid cache directories"
     /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -z
 fi
-
-: >/var/run/squid/squid.pid
