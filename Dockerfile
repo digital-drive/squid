@@ -37,6 +37,7 @@ RUN set -eux; \
         ./configure --prefix=/usr \
                     --localstatedir=/var \
                     --libexecdir=/usr/lib/squid \
+                    --disable-arch-native \
                     --enable-ssl \
                     --enable-ecap; \
         make -j$(nproc); \
