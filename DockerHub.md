@@ -1,66 +1,69 @@
 ---
-description: Squid6 multi-stage Docker image with SSL/ECAP build and s6-managed runtime; ideal caching proxy svc.
+description: Squid 6 on Debian with s6, ready for caching proxy use.
 ---
 
-# digitaldriveio/squid (Docker Hub README)
+# digitaldriveio/squid
 
-Multi-stage Squid 6 build: the first stage compiles Squid 6.14 from the GitHub
-`SQUID_6_14` release (downloaded as `squid-6.14.tar.bz2` and verified via SHA256)
-on `debian:bookworm`, the second packages the binaries on `debian:bookworm-slim`
-with minimal runtime dependencies. The runtime image ships `s6-overlay v3.2.1.0`
-plus the `rootfs/etc/services.d/squid` supervision scripts so Squid runs under
-`/init` with PID/log dirs owned by `proxy`. Both `linux/amd64` and `linux/arm64`
-targets compile Squid from source so multi-arch manifests keep identical features.
+Squid 6.14 with SSL and eCAP support is precompiled for Debian Bookworm-slim.
+You can run a modern caching proxy without ever building it from source.
+The image runs Squid under `s6-overlay v3.2.1.0` as the unprivileged `proxy` user.
+It keeps logs and cache directories persistent-friendly and publishes `3128/tcp` for client traffic.
 
 ## Highlights
 
-- Build stage installs `build-essential`, `pkg-config`, `wget`, `libssl-dev`,
-  `libecap3-dev`, `libcap-dev`, and the rest of the toolchain needed to compile
-  Squid 6.14 with TLS and eCAP support on both `amd64` (with `-march=x86-64 -mtune=generic`)
-  and `arm64` (with Debian's hardened defaults).
-- Runtime stage copies the compiled `/usr` and `/var` trees into a slim Debian
-  image, installs `libssl3` and `libecap3`, and runs Squid as the `proxy` user.
-- Ports: `3128/tcp` for the proxy; the bundled service runs Squid with `-N -d1` so Docker sees real restarts and still captures log output.
+- Only the required runtime libraries (`libssl3`, `libecap3`) are installed so the image stays small.
+- Squid launches in the foreground (`/usr/sbin/squid -N -d1`) while `s6` monitors restarts.
+  `s6-log` streams access/cache logs to stdout.
+- `cache` and `log` directories are owned by `proxy`, so they can be mounted as named volumes.
+  `docker logs` mirrors the same output from those files.
+- A built-in healthcheck runs `squidclient mgr:info` so orchestrators immediately know when the proxy is ready.
 
-## Usage
+## Quickstart
 
 ```bash
 docker build -t digitaldriveio/squid .
 
-docker run \
-  --name squid \
+docker run --name squid \
   -p 3128:3128 \
   digitaldriveio/squid:snapshot
 ```
 
-### With persistence & custom config
+## Runtime configuration
+
+- **Configuration:** Mount your `squid.conf` (read-only if practical) into `/etc/squid/squid.conf`.
+  That gives you control over ACLs and caches; drop snippets in `/etc/squid/conf.d/*.conf`.
+- **Cache directory:** Persist `/var/cache/squid` to retain warm cache contents across restarts.
+  Use `-v squid-cache:/var/cache/squid` for named volumes.
+- **Logs:** Persist `/var/log/squid` to keep the log history or let `s6-log` stream them to stdout.
+  `docker logs` carries the same output from those streams.
+- **Reload:** Send `squid -k reconfigure` inside the container after configuration changes.
+  The service keeps running so you do not need to restart it.
+- **Ports:** Publish `3128/tcp` for proxy traffic from clients.
+
+## Volumes
 
 ```bash
-docker run \
-  --name squid \
-  -p 3128:3128 \
-  -v ./config/squid.conf:/etc/squid/squid.conf:ro \
-  -v squid-cache:/var/cache/squid \
-  -v squid-logs:/var/log/squid \
-  digitaldriveio/squid:snapshot
+-v squid-cache:/var/cache/squid
+-v squid-logs:/var/log/squid
 ```
 
-Reload config after edits:
+These ensure the proxy keeps warm caches and audit trails even when containers are replaced.
 
-```bash
-docker exec squid squid -k reconfigure
-```
+## Observability
+
+- Access logs: `/var/log/squid/access.log` (mirrored to stdout)
+- Cache logs: `/var/log/squid/cache.log` (mirrored to stdout)
+- Manager interface: `docker exec squid squidclient mgr:info`
+- Healthcheck: `HEALTHCHECK CMD squidclient mgr:info`
 
 ## Notes
 
-- The image ships with a Docker `HEALTHCHECK` that runs `squidclient mgr:info`, so orchestrators detect readiness out of the box; replace it if you prefer a different probe.
-- The image is file-driven: configure Squid via `squid.conf` and drop-in snippets
-  rather than environment variables.
-- TLS interception, authentication helpers, and advanced cachefeatures depend on
-  the configuration you mount into the container; they are not baked into the image.
-- Squid writes `access.log` / `cache.log` under `/var/log/squid` and the bundled
-  `s6-log` service mirrors those lines to stdout, so `docker logs` exposes the same stream.
+- The build stage compiles Squid 6.14 with TLS/eCAP so the runtime ships with a feature-complete proxy.
+  It still starts from Debian Bookworm-slim.
+- Mounting TLS interception/authentication helpers and adjusting TLS mode is handled via your `squid.conf`.
+  The image ships without auth helpers to keep things lean.
+- Need a different Squid release? Build arguments like `SQUID_VERSION` and `SQUID_TAG` can be passed to `docker build`.
 
 ## License
 
-`digitaldriveio/squid` is published under the GNU General Public License v3 or later (`GPL-3.0-or-later`). See `LICENSE` for details.
+`digitaldriveio/squid` is distributed under `GPL-3.0-or-later` (see `LICENSE`).

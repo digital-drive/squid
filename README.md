@@ -1,17 +1,21 @@
 # digitaldriveio/squid
 
 The `digitaldriveio/squid` project packages a Squid branch 6.14 proxy by
-compiling it inside a reproducible multi-stage Debian Bookworm pipeline so
-users can distribute a lean, feature-complete Debian Bookworm-slim runtime.
-The build enables TLS and ECAP support with conservative flags on `amd64`
-and hardened defaults on `arm64`, then copies the resulting binaries into
-the runtime image so operators never have to compile Squid themselves.
+compiling it inside a reproducible multi-stage Debian Bookworm pipeline.
+That lets teams distribute a lean, feature-complete Debian Bookworm-slim
+runtime without forcing operators to rebuild Squid. The build then enables TLS
+and ECAP support with conservative flags on `amd64` and hardened defaults on
+`arm64`, and copies the binaries into the runtime image so operators never
+compile Squid themselves.
 
 ## Features
 
-- Runs a Squid 6.14 proxy (built from source in the build stage) on a Debian Bookworm-slim runtime with only the libraries Squid actually needs (`libssl3`, `libecap3`), keeping the image compact.
-- Squid runs in the foreground (`-N -d1`) so Docker/s6 can supervise it while still emitting actionable log lines and restarting transparently.
-- Mounts-friendly: configuration, cache, and log directories can all be persisted easily, and the `rootfs/etc/services.d` tree (bundled with `s6-overlay v3.2.1.0`) provides the supervisor/run/log scripts.
+- Runs a Squid 6.14 proxy (built from source in the build stage) on Debian Bookworm-slim.
+  Only the runtime libraries that Squid needs (`libssl3`, `libecap3`) are installed so the image stays compact.
+- Squid runs in the foreground (`-N -d1`), so Docker/s6 can supervise it while still emitting actionable log lines.
+  Restarts happen transparently and keep the log stream consistent.
+- Mounts-friendly: configuration, cache, and log directories can be persisted easily.
+- The `rootfs/etc/services.d` tree (bundled with `s6-overlay v3.2.1.0`) supplies the supervisor/run/log scripts.
 
 ## Quick Start
 
@@ -35,7 +39,8 @@ docker build --build-arg SQUID_VERSION=6.14 \
      -t digitaldriveio/squid:6.14 .
 ```
 
-> **Security note:** the built-in `/etc/squid/squid.conf` simply covers `_localnet` as `acl localnet src all` and allows `http_access` to `localnet`, so the default image behaves like an open proxy inside the container network; mount a stricter config (ideally read-only) before exposing the container externally.
+> **Security note:** the built-in `/etc/squid/squid.conf` covers `_localnet` and allows `http_access` to `localnet`.
+> Mount a stricter config (ideally read-only) before exposing the container so the image does not act as an open proxy.
 
 ### Custom configuration
 
@@ -60,13 +65,14 @@ docker exec squid squid -k reconfigure
 
 ## Configuration & Persistence
 
-| Aspect              | Recommendation                                                                                                     |
-|---------------------|--------------------------------------------------------------------------------------------------------------------|
-| Listening port      | Publish `3128/tcp` so workloads can reach the proxy.                                                               |
-| Squid configuration | Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`.                                           |
-| Cache directory     | Persist `/var/cache/squid` to warm caches between container restarts.                                              |
-| Logs                | Mount `/var/log/squid` if host-level log shipping or inspection is needed (also streamed via `docker logs`).       |
-| Reload control      | Use `squid -k reconfigure` inside the container to apply config changes (the bundled service runs `squid -N -d1`). |
+- **Listening port:** Publish `3128/tcp` so workloads can reach the proxy.
+- **Squid configuration:** Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`.
+  This controls ACLs and caching.
+- **Cache directory:** Persist `/var/cache/squid` to keep caches warm between restarts.
+- **Logs:** Mount `/var/log/squid` if host-level log shipping or inspection is needed.
+  These same streams also appear via `docker logs`.
+- **Reload control:** Run `squid -k reconfigure` inside the container to apply config changes without restarting Squid.
+  The bundled service already runs `squid -N -d1` so it stays in the foreground.
 
 There are no runtime environment variables; configure Squid via its native
 file-based syntax so you retain the full power of ACLs, caching, and helpers.
@@ -92,4 +98,5 @@ These files can be shipped to your log backend or inspected manually.
 
 ## License
 
-`digitaldriveio/squid` is distributed under the GNU General Public License v3 or later (`GPL-3.0-or-later`). See `LICENSE` for the full terms.
+`digitaldriveio/squid` is distributed under the GNU General Public License v3 or later (`GPL-3.0-or-later`).
+See `LICENSE` for the full terms.
