@@ -3,7 +3,7 @@ set -euo pipefail
 
 IMAGE_BASE="digitaldriveio/squid"
 PLATFORMS="${PLATFORMS:-linux/amd64,linux/arm64}"
-BUILDER_NAME="${BUILDER_NAME:-dns-healthcheck-builder}"
+BUILDER_NAME="${BUILDER_NAME:-squid-builder}"
 
 VERSION="${1:-}"
 if [[ -z "$VERSION" ]]; then
