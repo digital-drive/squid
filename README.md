@@ -1,26 +1,17 @@
 # digitaldriveio/squid
 
-Multi-stage Debian Bookworm build that compiles Squid **branch 6.14** from the
-official GitHub release (`SQUID_6_14`) and ships the resulting binaries on a
-slim runtime image. This keeps the final runtime lean while still enabling
-feature-rich compiler flags such as TLS and ECAP support.
+The `digitaldriveio/squid` project packages a Squid branch 6.14 proxy by
+compiling it inside a reproducible multi-stage Debian Bookworm pipeline so
+users can distribute a lean, feature-complete Debian Bookworm-slim runtime.
+The build enables TLS and ECAP support with conservative flags on `amd64`
+and hardened defaults on `arm64`, then copies the resulting binaries into
+the runtime image so operators never have to compile Squid themselves.
 
 ## Features
 
-- Build stage pulls `debian:bookworm`, installs build dependencies, downloads
-  the Squid 6.14 BZ2 release from GitHub, verifies the provided SHA256 (`cdc6...`),
-  and configures it with `--enable-ssl` / `--enable-ecap`. When building for
-  `linux/amd64`, the configure step also sets `-march=x86-64 -mtune=generic`,
-  keeping the binary compatible with older x86_64 hosts. Non-`amd64` targets skip
-  the source build and rely on Debian's packaged `squid` so the multi-arch image
-  remains lightweight.
-- Runtime stage is based on `debian:bookworm-slim` and carries only the
-  libraries Squid actually needs (`libssl3`, `libecap3`).
-- Runs Squid in the foreground (`-N`) and keeps level-1 debugging enabled (`-d1`) so Docker supervises it directly while still surfacing useful log lines.
-- Mounts-friendly: configuration, cache, and log directories can all be
-  persisted easily, and Squid is supervised via `s6` so PID/log directories are
-  pre-warmed and the process restarts cleanly. The `rootfs/etc/services.d`
-  tree defines the supervisor scripts and ships with `s6-overlay v3.2.1.0`.
+- Runs a Squid 6.14 proxy (built from source in the build stage) on a Debian Bookworm-slim runtime with only the libraries Squid actually needs (`libssl3`, `libecap3`), keeping the image compact.
+- Squid runs in the foreground (`-N -d1`) so Docker/s6 can supervise it while still emitting actionable log lines and restarting transparently.
+- Mounts-friendly: configuration, cache, and log directories can all be persisted easily, and the `rootfs/etc/services.d` tree (bundled with `s6-overlay v3.2.1.0`) provides the supervisor/run/log scripts.
 
 ## Quick Start
 
@@ -40,9 +31,11 @@ branch-6 releases if needed:
 
 ```bash
 docker build --build-arg SQUID_VERSION=6.14 \
-  --build-arg SQUID_TAG=SQUID_6_14 \
-  -t digitaldriveio/squid:6.14 .
+     --build-arg SQUID_TAG=SQUID_6_14 \
+     -t digitaldriveio/squid:6.14 .
 ```
+
+> **Security note:** the built-in `/etc/squid/squid.conf` simply covers `_localnet` as `acl localnet src all` and allows `http_access` to `localnet`, so the default image behaves like an open proxy inside the container network; mount a stricter config (ideally read-only) before exposing the container externally.
 
 ### Custom configuration
 
@@ -83,6 +76,7 @@ file-based syntax so you retain the full power of ACLs, caching, and helpers.
 - Access logs: `/var/log/squid/access.log`
 - Cache logs: `/var/log/squid/cache.log`
 - Manager interface: `docker exec squid squidclient mgr:info`
+- Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient mgr:info` so orchestrators know when Squid is ready.
 
 `docker logs squid` shows the same access/cache log lines because the `s6-log`
 service fans them out to stdout while rotating files under `/var/log/squid`.
@@ -98,4 +92,4 @@ These files can be shipped to your log backend or inspected manually.
 
 ## License
 
-Specify your licensing terms here (MIT, Apache-2.0, etc.).
+`digitaldriveio/squid` is distributed under the GNU General Public License v3 or later (`GPL-3.0-or-later`). See `LICENSE` for the full terms.
