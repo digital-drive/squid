@@ -34,7 +34,7 @@ Bookworm-slim base without forcing users to compile Squid themselves.
   runtime stage also deploys `s6-overlay v3.2.1.0`, copies the `rootfs/etc/services.d/squid`
   definition (run/log scripts), and runs via `/init` so PID/log dirs are owned by
   `proxy`.
-- Creates `/var/spool/squid` and `/var/log/squid`, ensures `proxy:proxy`
+- Creates `/var/cache/squid` and `/var/log/squid`, ensures `proxy:proxy`
   ownership, streams Squid logs to Docker stdout via `s6-log`, and runs as the
   unprivileged `proxy` user.
 - Command: `CMD ["/usr/sbin/squid", "-N", "-d1"]` keeps Squid running in the
@@ -90,3 +90,9 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 - Favor declarative Squid configuration inside version-controlled `config/`
   directories instead of relying on runtime environment variables.
 - Use LF line endings so Debian tooling and shell scripts behave consistently.
+
+## Licensing
+
+The image and the accompanying repository artifacts are distributed under the
+GNU General Public License version 3 or later (`GPL-3.0-or-later`). Update
+`LICENSE` if licensing terms evolve and mention the license in the other docs.
