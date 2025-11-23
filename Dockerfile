@@ -14,7 +14,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       build-essential pkg-config wget perl \
       libssl-dev libecap3-dev libdb-dev libexpat1-dev \
-      libcppunit-dev libcap-dev ca-certificates\
+      libcppunit-dev libcap-dev ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/cache/squid-build
@@ -24,6 +24,8 @@ RUN set -eux; \
         arm64) ARCH_CFLAGS="-O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2" ;; \
         *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
+    export SQUID_CFLAGS="${ARCH_CFLAGS}"; \
+    export SQUID_CXXFLAGS="${ARCH_CFLAGS}"; \
     wget https://github.com/squid-cache/squid/releases/download/${SQUID_TAG}/squid-${SQUID_VERSION}.tar.bz2; \
     echo "${SQUID_SHA256}  squid-${SQUID_VERSION}.tar.bz2" > squid-${SQUID_VERSION}.tar.bz2.sha256; \
     sha256sum -c squid-${SQUID_VERSION}.tar.bz2.sha256; \
