@@ -13,8 +13,11 @@ ARG SQUID_LDFLAGS="-Wl,-z,relro,-z,now"
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       build-essential pkg-config wget perl \
-      libssl-dev libecap3-dev libdb-dev libexpat1-dev \
-      libcppunit-dev libcap-dev ca-certificates \
+      libssl-dev libgnutls28-dev libecap3-dev libdb-dev libexpat1-dev \
+      libcppunit-dev libcap-dev \
+      libldap2-dev libsasl2-dev libkrb5-dev libcom-err-dev \
+      libsmbclient-dev libwbclient-dev tdb-dev \
+      libnetfilter-conntrack-dev ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/cache/squid-build
