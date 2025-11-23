@@ -19,28 +19,28 @@ RUN apt-get update \
 
 WORKDIR /var/cache/squid-build
 RUN set -eux; \
-    if [ "$TARGETARCH" = "amd64" ]; then \
-        wget https://github.com/squid-cache/squid/releases/download/${SQUID_TAG}/squid-${SQUID_VERSION}.tar.bz2; \
-        echo "${SQUID_SHA256}  squid-${SQUID_VERSION}.tar.bz2" > squid-${SQUID_VERSION}.tar.bz2.sha256; \
-        sha256sum -c squid-${SQUID_VERSION}.tar.bz2.sha256; \
-        tar xjf squid-${SQUID_VERSION}.tar.bz2; \
-        cd squid-${SQUID_VERSION}; \
-        export CFLAGS="${SQUID_CFLAGS}"; \
-        export CXXFLAGS="${SQUID_CFLAGS}"; \
-        export LDFLAGS="${SQUID_LDFLAGS}"; \
-        ./configure --prefix=/usr \
-                    --localstatedir=/var \
-                    --libexecdir=/usr/lib/squid \
-                    --with-pidfile=/var/run/squid/squid.pid \
-                    --disable-arch-native \
-                    --enable-ssl \
-                    --enable-ecap; \
-        make -j$(nproc); \
-        make install DESTDIR=/var/cache/squid-install; \
-    else \
-        echo "Unsupported architecture: ${TARGETARCH}" >&2; \
-        exit 1; \
-    fi
+    case "${TARGETARCH}" in \
+        amd64) ARCH_CFLAGS="${SQUID_CFLAGS}" ;; \
+        arm64) ARCH_CFLAGS="-O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    wget https://github.com/squid-cache/squid/releases/download/${SQUID_TAG}/squid-${SQUID_VERSION}.tar.bz2; \
+    echo "${SQUID_SHA256}  squid-${SQUID_VERSION}.tar.bz2" > squid-${SQUID_VERSION}.tar.bz2.sha256; \
+    sha256sum -c squid-${SQUID_VERSION}.tar.bz2.sha256; \
+    tar xjf squid-${SQUID_VERSION}.tar.bz2; \
+    cd squid-${SQUID_VERSION}; \
+    export CFLAGS="${ARCH_CFLAGS}"; \
+    export CXXFLAGS="${ARCH_CFLAGS}"; \
+    export LDFLAGS="${SQUID_LDFLAGS}"; \
+    ./configure --prefix=/usr \
+                --localstatedir=/var \
+                --libexecdir=/usr/lib/squid \
+                --with-pidfile=/var/run/squid/squid.pid \
+                --disable-arch-native \
+                --enable-ssl \
+                --enable-ecap; \
+    make -j$(nproc); \
+    make install DESTDIR=/var/cache/squid-install
 
 
 # -------- RUNTIME STAGE --------
@@ -71,9 +71,10 @@ RUN set -eux; \
         useradd -r -g proxy -s /usr/sbin/nologin proxy; \
     fi
 
- RUN set -eux; \
+RUN set -eux; \
     case "${TARGETARCH}" in \
         amd64) S6_ARCH="x86_64" ;; \
+        arm64) S6_ARCH="aarch64" ;; \
         *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
@@ -98,5 +99,9 @@ RUN set -eux; \
         /etc/cont-init.d/10-squid-dirs \
         /etc/services.d/squid/run \
         /etc/services.d/squid/log/run
+
+VOLUME ["/var/cache/squid", "/var/log/squid"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD /usr/bin/squidclient mgr:info
 
 ENTRYPOINT ["/init"]
