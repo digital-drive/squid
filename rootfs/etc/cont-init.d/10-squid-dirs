@@ -2,15 +2,20 @@
 set -eu
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-mkdir -p /var/spool/squid /var/log/squid /var/run/squid
+mkdir -p /var/cache/squid /var/log/squid /var/run/squid
 touch /var/log/squid/cache.log /var/log/squid/access.log
-chown -R proxy:proxy /var/spool/squid /var/log/squid
+chown -R proxy:proxy /var/cache/squid /var/log/squid
 chown proxy:proxy /var/run/squid
+chown proxy:proxy /var/cache/squid
+rm -f /var/run/squid/squid.pid
 
-: >/var/run/squid/squid.pid
-chown proxy:proxy /var/run/squid/squid.pid
-
-if [ ! -d /var/spool/squid/00 ] || [ -z "$(ls -A /var/spool/squid/00 2>/dev/null)" ]; then
+INIT_MARKER=/var/cache/squid/.initialized
+if [ ! -f "${INIT_MARKER}" ]; then
     echo "[cont-init] Initializing Squid cache directories"
     /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -z
+    /command/s6-setuidgid proxy /usr/sbin/squid -k shutdown || true
+    touch "${INIT_MARKER}"
+    chown proxy:proxy "${INIT_MARKER}"
+else
+    echo "[cont-init] Squid cache already initialized"
 fi
