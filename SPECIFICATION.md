@@ -13,22 +13,28 @@ helpers (`--enable-ecap`).
 
 ## 2. Components
 
-| Component    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Build base   | `debian:bookworm` with `build-essential`, `pkg-config`, `wget`, and Squid deps                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Build steps  | For `linux/amd64`, downloads `squid-6.14.tar.bz2` from `https://github.com/squid-cache/squid/releases/download/SQUID_6_14/` into `/var/cache/squid-build`, verifies SHA256, runs `./configure --prefix=/usr --localstatedir=/var --libexecdir=/usr/lib/squid --enable-ssl --enable-ecap` (with `CFLAGS=CXXFLAGS=-march=x86-64 -mtune=generic`), then `make && make install DESTDIR=/var/cache/squid-install`. Other architectures skip the source build so the runtime stage can install Debian's prebuilt `squid`. |
-| Runtime base | `debian:bookworm-slim` to keep the final image small                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Runtime deps | `libssl3`, `libecap3` installed via `apt`; non-`amd64` also get Debian’s `squid`.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Supervision  | `s6-overlay v3.2.1.0` plus `rootfs/etc/services.d/squid` run/log scripts ensure Squid runs under `/init`.                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Files copied | `/var/cache/squid-install/usr` (includes `/usr/etc`, `/usr/lib`, etc.) for `amd64`; other architectures use the Debian `squid` package instead.                                                                                                                                                                                                                                                                                                                                                                     |
-| Entry point  | `ENTRYPOINT ["/init"]` (with `s6-overlay` launching Squid via `rootfs/etc/services.d/squid`)                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Ports        | `3128/tcp` (proxy)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Volumes      | `/var/cache/squid` (cache), `/var/log/squid` (logs)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Component    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Build base   | `debian:bookworm` with `build-essential`, `pkg-config`, `wget`, and Squid deps                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Build steps  | Downloads `squid-6.14.tar.bz2` from `https://github.com/squid-cache/squid/releases/download/SQUID_6_14/` into `/var/cache/squid-build`, verifies SHA256, runs `./configure --prefix=/usr --localstatedir=/var --libexecdir=/usr/lib/squid --with-pidfile=/var/run/squid/squid.pid --enable-ssl --enable-ecap --disable-arch-native`, then `make && make install DESTDIR=/var/cache/squid-install`. `linux/amd64` adds `CFLAGS=CXXFLAGS=-march=x86-64 -mtune=generic` while `linux/arm64` compiles with Debian's hardened defaults. |
+| Runtime base | `debian:bookworm-slim` to keep the final image small                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Runtime deps | `libssl3`, `libecap3` installed via `apt`; Squid binaries are copied from the build stage regardless of architecture.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Supervision  | `s6-overlay v3.2.1.0` plus `rootfs/etc/services.d/squid` run/log scripts ensure Squid runs under `/init`.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Files copied | `/var/cache/squid-install/usr` (includes `/usr/etc`, `/usr/lib`, etc.) for every supported architecture so `amd64` and `arm64` share the same feature set.                                                                                                                                                                                                                                                                                                                                                                         |
+| Entry point  | `ENTRYPOINT ["/init"]` (with `s6-overlay` launching Squid via `rootfs/etc/services.d/squid`)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Ports        | `3128/tcp` (proxy)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Volumes      | `/var/cache/squid` (cache), `/var/log/squid` (logs)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
-All files in the repository must retain LF line endings to avoid Debian
-variance.
+All files in the repository must retain LF line endings to avoid Debian variance.
 
-## 3. Configuration Interface
+## 3. Build Details
+
+- Squid 6.14 is downloaded from `https://github.com/squid-cache/squid/releases/download/SQUID_6_14/squid-6.14.tar.bz2`, stored in `/var/cache/squid-build`, and verified against the published SHA256 (`cdc6b6c1ed519836bebc03ef3a6ed3935c411b1152920b18a2210731d96fdf67`) before extraction.
+- The tarball is configured with `--prefix=/usr`, `--localstatedir=/var`, `--libexecdir=/usr/lib/squid`, and `--with-pidfile=/var/run/squid/squid.pid`, alongside `--disable-arch-native --enable-ssl --enable-ecap`; `linux/amd64` adds `CFLAGS/CXXFLAGS=-march=x86-64 -mtune=generic -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2`, while `linux/arm64` compiles with Debian’s hardened defaults.
+- After `make -j$(nproc)` succeeds, `make install DESTDIR=/var/cache/squid-install` stages the `/usr` tree that is copied into the runtime image so the final container never needs to compile anything.
+- See `CONTRIBUTING.md` for how to reproduce builds, test contributions, and update documentation when the build or runtime behaviour changes.
+
+## 4. Configuration Interface
 
 | Mechanism             | Behaviour                                                                                                             |
 |-----------------------|-----------------------------------------------------------------------------------------------------------------------|
@@ -40,7 +46,7 @@ variance.
 
 The image does not honor any environment variables; configuration remains fully file-driven to preserve Squid semantics.
 
-## 4. Runtime Behaviour
+## 5. Runtime Behaviour
 
 1. During container startup, Squid ensures cache/log directories exist and have
    correct permissions for the `proxy` user (the `s6` init hook also owns
@@ -49,14 +55,11 @@ The image does not honor any environment variables; configuration remains fully 
    mirrors the access/cache files under `/var/log/squid` to stdout, giving both
    durable files and `docker logs` visibility as `/init` keeps the process alive
    and manages restarts.
-3. Non-`amd64` targets skip the source build and simply install Debian's `squid`
-   package inside the runtime image so the proxy is still available on those
-   platforms without rebuilding inside QEMU.
-4. Health can be inferred from the Squid process exit code; optional healthchecks
-   (not provided by default) can call `squidclient mgr:info` for readiness.
+3. Multi-architecture builds compile Squid from source with hardened defaults so their resulting images keep the same feature set as `amd64`.
+4. Docker’s HEALTHCHECK now invokes `squidclient mgr:info`, so orchestrators receive instant readiness updates without extra configuration.
 5. On shutdown, Squid flushes dirty caches, writes its `cache.log`, and exits cleanly.
 
-## 5. Failure Modes & Limitations
+## 6. Failure Modes & Limitations
 
 - Breaking changes to Squid configuration will prevent Squid from starting; check
   `/var/log/squid/cache.log` for parser errors.
@@ -64,15 +67,20 @@ The image does not honor any environment variables; configuration remains fully 
   and must be supplied via custom configuration or additional binaries.
 - The build stage demands outbound HTTP access to download Debian archives and
   the Squid source tarball; offline builds require a local mirror or vendor.
-- No healthcheck is shipped; add a `HEALTHCHECK CMD squidclient mgr:info` or
-  equivalent in your own manifest if orchestrators need service readiness signals.
+- A `HEALTHCHECK CMD squidclient mgr:info` is included in the Dockerfile so
+  orchestrators receive readiness signals without extra wiring; override it
+  only if you need a different probe.
 
-## 6. Expected Usage
+## 7. Expected Usage
 
-1. Build `digitaldriveio/squid` with `docker build` or pull from your registry.
+1. Build `digitaldriveio/squid` with `docker build` and tag it as needed for your registry (e.g., `digitaldriveio/squid:snapshot`).
 2. Provide configuration and persistence mounts tailored to your environment.
 3. Route workloads through Squid by publishing `3128/tcp` and pointing clients at it.
 4. Monitor logs under `/var/log/squid` or query `squidclient mgr:info` for runtime
    visibility.
+
+## 8. Licensing
+
+The `digitaldriveio/squid` image (and the associated repository content) is released under the GNU General Public License version 3 or later (`GPL-3.0-or-later`). See `LICENSE` for the full text.
 
 Keep this specification synchronized with README.md and AGENTS.md when any behavioural details change.
