@@ -4,7 +4,7 @@ stages:
 variables:
   DOCKER_IMAGE:  "$CI_REGISTRY/squid"
   DOCKER_HUB_IMAGE:  "$DOCKER_HUB_ORG/squid:snapshot"
-  DOCKER_PLATFORMS: "linux/amd64"
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 build_and_push_docker:
   image: docker:28-cli
