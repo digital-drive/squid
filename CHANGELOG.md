@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.1.1](/compare/v1.1.0...v1.1.1) (2025-11-24)
+
+### Bug Fixes
+
+* add missing runtime dependencies to Dockerfile 897191e
+* remove unnecessary liblber-2.5-0 dependency from Dockerfile 200a096
+
 ## [1.1.0](/compare/v1.0.0...v1.1.0) (2025-11-24)
 
 ### Bug Fixes
