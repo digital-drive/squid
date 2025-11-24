@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.1.2](/compare/v1.1.1...v1.1.2) (2025-11-24)
+
+### Bug Fixes
+
+* add missing http_port directive to squid configuration 37304c1
+
 ## [1.1.1](/compare/v1.1.0...v1.1.1) (2025-11-24)
 
 ### Bug Fixes
