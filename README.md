@@ -41,7 +41,7 @@ docker build --build-arg SQUID_VERSION=6.14 \
 ```
 
 > **Security note:** the built-in `/etc/squid/squid.conf` covers `_localnet` and allows `http_access` to `localnet`.
-- If you override the baked-in `squid.conf`, remember the runtime healthcheck always hits `/squid-internal-mgr/info`. Allow localhost (or the healthcheck ACL) to request that manager page or change the healthcheck command so it hits an endpoint your custom config permits; otherwise the docker healthcheck will continually return `ERR_ACCESS_DENIED`.
+- If you override the baked-in `squid.conf`, remember the runtime healthcheck hits the cache manager via `cache_object://127.0.0.1/info`. Keep the `127.0.0.1:3199` listener plus `cachemgr_passwd none info` (or supply your own password and update the Dockerfile healthcheck command) so localhost can still read the `info` action; otherwise the docker healthcheck will continually return `ERR_ACCESS_DENIED`.
 
 ### Custom configuration
 
@@ -82,8 +82,8 @@ file-based syntax so you retain the full power of ACLs, caching, and helpers.
 
 - Access logs: `/var/log/squid/access.log`
 - Cache logs: `/var/log/squid/cache.log`
-- Manager interface: `docker exec squid squidclient mgr:info`
-- Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 mgr:info` so orchestrators know when Squid is ready. The manager interface now listens on `127.0.0.1:3199` while port `3128` continues to serve proxy traffic, preventing Squid from forwarding its own manager requests.
+- Manager interface: `docker exec squid squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` (permitted by the bundled `cachemgr_passwd none info` rule, with every other manager action disabled).
+- Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` so orchestrators know when Squid is ready. The manager interface listens on `127.0.0.1:3199` while port `3128` continues to serve proxy traffic, preventing Squid from forwarding its own manager requests.
 
 `docker logs squid` shows the same access/cache log lines because the `s6-log`
 service fans them out to stdout while rotating files under `/var/log/squid`.

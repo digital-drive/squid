@@ -16,7 +16,7 @@ It keeps logs and cache directories persistent-friendly and publishes `3128/tcp`
   `s6-log` streams access/cache logs to stdout.
 - `cache` and `log` directories are owned by `proxy`, so they can be mounted as named volumes.
   `docker logs` mirrors the same output from those files.
-- A built-in healthcheck runs `squidclient mgr:info` so orchestrators immediately know when the proxy is ready.
+- A built-in healthcheck runs `squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info`, enabled via a dedicated localhost-only listener and a `cachemgr_passwd none info` rule so only that action is exposed.
 
 ## Quickstart
 
@@ -53,8 +53,8 @@ These ensure the proxy keeps warm caches and audit trails even when containers a
 
 - Access logs: `/var/log/squid/access.log` (mirrored to stdout)
 - Cache logs: `/var/log/squid/cache.log` (mirrored to stdout)
-- Manager interface: `docker exec squid squidclient mgr:info`
-- Healthcheck: `HEALTHCHECK CMD squidclient mgr:info`
+- Manager interface: `docker exec squid squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` (other cache manager actions remain disabled).
+- Healthcheck: `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info`
 
 ## Notes
 

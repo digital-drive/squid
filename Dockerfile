@@ -116,6 +116,6 @@ RUN set -eux; \
 
 VOLUME ["/var/cache/squid", "/var/log/squid"]
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD /usr/bin/squidclient -h 127.0.0.1 -p 3199 mgr:info
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD /usr/bin/squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info
 
 ENTRYPOINT ["/init"]

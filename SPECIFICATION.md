@@ -84,7 +84,8 @@ The image does not honor any environment variables; configuration remains fully 
    This gives both durable files and `docker logs` visibility as `/init` keeps the process alive and manages restarts.
 3. Multi-architecture builds compile Squid from source with hardened defaults.
    Their resulting images keep the same feature set as `amd64`.
-4. Docker’s HEALTHCHECK now invokes `squidclient mgr:info`.
+4. Docker's HEALTHCHECK now invokes `squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info`,
+   enabled by a restrictive `cachemgr_passwd none info` rule so only that action is exposed.
    Orchestrators receive instant readiness updates without extra configuration.
 5. On shutdown, Squid flushes dirty caches, writes its `cache.log`, and exits cleanly.
 
@@ -96,9 +97,9 @@ The image does not honor any environment variables; configuration remains fully 
   and must be supplied via custom configuration or additional binaries.
 - The build stage demands outbound HTTP access to download Debian archives and
   the Squid source tarball; offline builds require a local mirror or vendor.
-- A `HEALTHCHECK CMD squidclient mgr:info` is included in the Dockerfile so
+- A `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` is included in the Dockerfile so
   orchestrators receive readiness signals without extra wiring; override it
-  only if you need a different probe.
+  only if you need a different probe (and adjust the matching `cachemgr_passwd`).
 
 ## 7. Expected Usage
 
@@ -106,7 +107,8 @@ The image does not honor any environment variables; configuration remains fully 
    For example, use `digitaldriveio/squid:snapshot`.
 2. Provide configuration and persistence mounts tailored to your environment.
 3. Route workloads through Squid by publishing `3128/tcp` and pointing clients at it.
-4. Monitor logs under `/var/log/squid` or query `squidclient mgr:info` for runtime visibility.
+4. Monitor logs under `/var/log/squid` or query `squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info`
+   (permitted by `cachemgr_passwd none info`) for runtime visibility.
 
 ## 8. Licensing
 

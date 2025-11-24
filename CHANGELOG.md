@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 * enhance Squid configuration and initialization for improved directory management and access control
+* make the Docker healthcheck hit `cache_object://127.0.0.1/info` and expose that manager action via a scoped `cachemgr_passwd` rule so the probe returns `200 OK` from localhost
 
 ## [1.2.1](/compare/v1.2.0...v1.2.1) (2025-11-24)
 
@@ -47,4 +48,4 @@
 ## 1.0.0 (2025-11-21)
 
 * Introduced the Squid 6.14 multi-stage Debian Bookworm build, documenting its features, configuration guidance, and licensing across README, SPECIFICATION, AGENTS, and DockerHub.
-* Added an upstream healthcheck (`squidclient mgr:info`), CONTRIBUTING guide, and GPL-3.0-or-later license reference so the image is documented and ready for publication.
+* Added an upstream healthcheck (`squidclient cache_object://127.0.0.1/info`), CONTRIBUTING guide, and GPL-3.0-or-later license reference so the image is documented and ready for publication.

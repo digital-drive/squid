@@ -74,7 +74,7 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 - TLS interception helpers and auth helpers are not bundled out of the box;
   add them through custom configuration and helper binaries if needed.
 - No healthcheck is configured by default; add one (e.g., using `squidclient
-  mgr:info`) if orchestrators need readiness signals.
+  cache_object://127.0.0.1/info`) if orchestrators need readiness signals.
 
 ## Example Project Structure
 
