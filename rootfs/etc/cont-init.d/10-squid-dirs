@@ -2,18 +2,24 @@
 set -eu
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-mkdir -p /var/cache/squid /var/log/squid /var/run/squid
+mkdir -p /var/cache/squid /var/log/squid /var/run/squid /var/spool/squid
 touch /var/log/squid/cache.log /var/log/squid/access.log
-chown -R proxy:proxy /var/cache/squid /var/log/squid
+chown -R proxy:proxy /var/cache/squid /var/log/squid /var/spool/squid
 chown proxy:proxy /var/run/squid
-chown proxy:proxy /var/cache/squid
 rm -f /var/run/squid/squid.pid
 
 INIT_MARKER=/var/cache/squid/.initialized
-if [ ! -f "${INIT_MARKER}" ]; then
+if [ ! -f "${INIT_MARKER}" ] || [ ! -d /var/spool/squid/00 ]; then
     echo "[cont-init] Initializing Squid cache directories"
-    /command/s6-setuidgid proxy /usr/sbin/squid -f /etc/squid/squid.conf -z
-    /command/s6-setuidgid proxy /usr/sbin/squid -k shutdown || true
+    for _i in $(seq 0 15); do
+        top=$(printf "%02X" "${_i}")
+        for _j in $(seq 0 255); do
+            subdir=$(printf "%02X" "${_j}")
+            mkdir -p "/var/spool/squid/${top}/${subdir}"
+        done
+    done
+    touch /var/spool/squid/swap.state
+    chown -R proxy:proxy /var/log/squid /var/cache/squid /var/spool/squid
     touch "${INIT_MARKER}"
     chown proxy:proxy "${INIT_MARKER}"
 else

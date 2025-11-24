@@ -16,6 +16,7 @@ compile Squid themselves.
   Restarts happen transparently and keep the log stream consistent.
 - Mounts-friendly: configuration, cache, and log directories can be persisted easily.
 - The `rootfs/etc/services.d` tree (bundled with `s6-overlay v3.2.1.0`) supplies the supervisor/run/log scripts.
+- Squid is launched as root so it can drop privileges itself (`cache_effective_user proxy`), which avoids the `no_suid` warnings when the runtime is controlled by `s6`.
 
 ## Quick Start
 
