@@ -69,7 +69,6 @@ RUN apt-get update \
       libecap3 \
       libnetfilter-conntrack3 \
       libldap-2.5-0 \
-      liblber-2.5-0 \
       libsasl2-2 \
       libkrb5-3 \
       libgssapi-krb5-2 \
