@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.2.3](/compare/v1.2.2...v1.2.3) (2025-11-24)
+
+### Bug Fixes
+
+* update healthcheck to use cache_object endpoint and adjust squid.conf for improved access control 3b0781c
+
 ## [1.2.2](/compare/v1.2.1...v1.2.2) (2025-11-24)
 
 ### Bug Fixes
