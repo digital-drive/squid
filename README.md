@@ -66,7 +66,7 @@ docker exec squid squid -k reconfigure
 ## Configuration & Persistence
 
 - **Listening port:** Publish `3128/tcp` so workloads can reach the proxy.
-- **Squid configuration:** Mount `/etc/squid/squid.conf` (read-only) or drop files under `conf.d/`.
+- **Squid configuration:** `/etc/squid/squid.conf` contains the defaults we ship (with the healthcheck allowance described above). Override the proxy by mounting a custom `/etc/squid/squid.conf` (read-only) or drop snippets under `/etc/squid/conf.d/`.
   This controls ACLs and caching.
 - **Cache directory:** Persist `/var/cache/squid` to keep caches warm between restarts.
 - **Logs:** Mount `/var/log/squid` if host-level log shipping or inspection is needed.
