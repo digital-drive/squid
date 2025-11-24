@@ -82,7 +82,7 @@ file-based syntax so you retain the full power of ACLs, caching, and helpers.
 - Access logs: `/var/log/squid/access.log`
 - Cache logs: `/var/log/squid/cache.log`
 - Manager interface: `docker exec squid squidclient mgr:info`
-- Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient mgr:info` so orchestrators know when Squid is ready.
+- Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 mgr:info` so orchestrators know when Squid is ready. The manager interface now listens on `127.0.0.1:3199` while port `3128` continues to serve proxy traffic, preventing Squid from forwarding its own manager requests.
 
 `docker logs squid` shows the same access/cache log lines because the `s6-log`
 service fans them out to stdout while rotating files under `/var/log/squid`.
