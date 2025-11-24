@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## [1.1.2](/compare/v1.1.1...v1.1.2) (2025-11-24)
+## [1.1.3](/compare/v1.1.2...v1.1.3) (2025-11-24)
+
+### Bug Fixes
+
+* update squid.conf to open to localnet access and improve healthcheck configuration 797b098
+
+ [1.1.2](/compare/v1.1.1...v1.1.2) (2025-11-24)
 
 ### Bug Fixes
 
