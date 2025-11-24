@@ -65,7 +65,17 @@ RUN apt-get update \
       xz-utils \
       procps \
       libssl3 \
+      libgnutls30 \
       libecap3 \
+      libnetfilter-conntrack3 \
+      libldap-2.5-0 \
+      liblber-2.5-0 \
+      libsasl2-2 \
+      libkrb5-3 \
+      libgssapi-krb5-2 \
+      libsmbclient \
+      libwbclient0 \
+      libtdb1 \
  && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
