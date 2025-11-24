@@ -40,7 +40,7 @@ docker build --build-arg SQUID_VERSION=6.14 \
 ```
 
 > **Security note:** the built-in `/etc/squid/squid.conf` covers `_localnet` and allows `http_access` to `localnet`.
-> Mount a stricter config (ideally read-only) before exposing the container so the image does not act as an open proxy.
+- If you override the baked-in `squid.conf`, remember the runtime healthcheck always hits `/squid-internal-mgr/info`. Allow localhost (or the healthcheck ACL) to request that manager page or change the healthcheck command so it hits an endpoint your custom config permits; otherwise the docker healthcheck will continually return `ERR_ACCESS_DENIED`.
 
 ### Custom configuration
 
