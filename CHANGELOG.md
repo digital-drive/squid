@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.2.1](/compare/v1.2.0...v1.2.1) (2025-11-24)
+
+### Bug Fixes
+
+* update healthcheck configuration and enhance squid.conf for manager access control b28eca8
+
 ## [1.2.0](/compare/v1.1.3...v1.2.0) (2025-11-24)
 
 ### Bug Fixes
