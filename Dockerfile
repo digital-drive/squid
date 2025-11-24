@@ -15,7 +15,7 @@ RUN apt-get update \
       build-essential pkg-config wget perl \
       libssl-dev libgnutls28-dev libecap3-dev libdb-dev libexpat1-dev \
       libcppunit-dev libcap-dev \
-      libldap2-dev libsasl2-dev libkrb5-dev libcom-err-dev \
+      libldap2-dev libsasl2-dev libkrb5-dev \
       libsmbclient-dev libwbclient-dev tdb-dev \
       libnetfilter-conntrack-dev ca-certificates \
  && rm -rf /var/lib/apt/lists/*
