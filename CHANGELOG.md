@@ -1,10 +1,23 @@
 # CHANGELOG
 
+# [1.2.4](/compare/v1.2.3...v1.2.4) (2025-11-25)
+
+### Bug Fixes
+
+* update caching configuration to use aufs for improved concurrency 614d14a
+
+### Features
+
+* add logging service for squid to manage access and cache logs
+* add placeholder configuration file and include directive for drop-in snippets
+* add release process guidelines and SKIP_LOCAL_BUILD option to scripts
+* enhance Dockerfile to include OpenSSL support and SSL certificate generation
+
 ## [1.2.3](/compare/v1.2.2...v1.2.3) (2025-11-24)
 
 ### Bug Fixes
 
-* update healthcheck to use cache_object endpoint and adjust squid.conf for improved access control 3b0781c
+* update healthcheck to use cache_object endpoint and adjust squid.conf for improved access control
 
 ## [1.2.2](/compare/v1.2.1...v1.2.2) (2025-11-24)
 
