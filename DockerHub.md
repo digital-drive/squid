@@ -1,10 +1,10 @@
 ---
-description: Squid 6 on Debian with s6, ready for caching proxy use.
+description: Squid 7 on Debian with s6, ready for caching proxy use.
 ---
 
 # digitaldriveio/squid
 
-Squid 6.14 with TLS, OpenSSL-based `ssl_crtd`, and eCAP support is precompiled for Debian Bookworm-slim.
+Squid 7.3 with TLS, OpenSSL-based `ssl_crtd`, and eCAP support is precompiled for Debian Bookworm-slim.
 You can run a modern caching proxy without ever building it from source.
 The image runs Squid under `s6-overlay v3.2.1.0` as the unprivileged `proxy` user.
 It keeps logs and cache directories persistent-friendly and publishes `3128/tcp` for client traffic.
@@ -57,10 +57,12 @@ These ensure the proxy keeps warm caches and audit trails even when containers a
 - Cache logs: `/var/log/squid/cache.log` (mirrored to stdout)
 - Manager interface: `docker exec squid squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` (other cache manager actions remain disabled).
 - Healthcheck: `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info`
+- A sidecar `squid-logs` service tails both log files as `proxy`, ensuring the same
+  lines reach `docker logs` while the files persist under `/var/log/squid`.
 
 ## Notes
 
-- The build stage compiles Squid 6.14 with TLS, OpenSSL/`ssl_crtd`, and eCAP so the runtime ships with a feature-complete proxy.
+- The build stage compiles Squid 7.3 with TLS, OpenSSL/`ssl_crtd`, and eCAP so the runtime ships with a feature-complete proxy.
   It still starts from Debian Bookworm-slim.
 - Mounting TLS interception/authentication helpers and adjusting TLS mode is handled via your `squid.conf`.
   The image ships without auth helpers to keep things lean.

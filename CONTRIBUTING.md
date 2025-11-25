@@ -4,7 +4,7 @@ Thanks for helping improve the Squid container. Follow these guidelines so new f
 
 ## Understand the project
 
-- The runtime image ships Squid 6.14 built from source, but all build-stage behaviour (dependencies, configure flags, verification steps, multi-arch handling) is captured in `SPECIFICATION.md`. Update that file whenever you change how the build is run.
+- The runtime image ships Squid 7.3 built from source, but all build-stage behaviour (dependencies, configure flags, verification steps, multi-arch handling) is captured in `SPECIFICATION.md`. Update that file whenever you change how the build is run.
 - READMEs and DockerHub.md describe the delivered image experience. Keep them focused on features, configuration knobs, ports, and observability; avoid duplicating low-level build steps there.
 
 ## Reproducing the build

@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 * update caching configuration to use aufs for improved concurrency 614d14a
+* remove the deprecated custom `acl manager` definition now that Squid ships it as a built-in, silencing upgrade warnings
 
 ### Features
 

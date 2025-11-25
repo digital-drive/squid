@@ -1,5 +1,5 @@
 ---
-github_description: "Squid 6 Bookworm-slim images on amd64/arm64 by compiling branch 6 with TLS/OpenSSL ssl_crtd/eCAP support, bundling s6 supervision, persistence-friendly cache/log volumes, healthchecks, and user guidance so teams can run a complete proxy without rebuilding or managing artifacts, keeping configs file-drive."
+github_description: "Squid 7 Bookworm-slim images on amd64/arm64 by compiling branch 7 with TLS/OpenSSL ssl_crtd/eCAP support, bundling s6 supervision, persistence-friendly cache/log volumes, healthchecks, and user guidance so teams can run a complete proxy without rebuilding or managing artifacts, keeping configs file-drive."
 ---
 
 # SPECIFICATION
@@ -8,11 +8,11 @@ Authoritative description of the `digitaldriveio/squid` container image.
 
 ## 1. Purpose
 
-Provide a reproducible Squid 6 proxy (tracking Squid branch 6) built from source
+Provide a reproducible Squid 7 proxy (tracking Squid branch 7) built from source
 within a Debian Bookworm build stage and delivered as a lean Debian
 Bookworm-slim runtime.
 This project packages the build pipeline, runtime image, and documentation so
-operators can deploy Squid 6 on amd64 or arm64 without compiling or managing
+operators can deploy Squid 7 on amd64 or arm64 without compiling or managing
 artifacts themselves.
 
 The multi-stage approach ensures only the required runtime dependencies are
@@ -25,7 +25,7 @@ included while still enabling features such as TLS (`--enable-ssl`), OpenSSL int
 - **Build base:** `debian:bookworm` with `build-essential`, `pkg-config`, and `wget`.
   It installs the Squid dependencies (`libssl-dev`, `libecap3-dev`, `libdb-dev`),
   `libexpat1-dev`, `libcppunit-dev`, and `libcap-dev`.
-- **Build steps:** Download `squid-6.14.tar.bz2` into `/var/cache/squid-build`.
+- **Build steps:** Download `squid-7.3.tar.bz2` into `/var/cache/squid-build`.
   Verify the SHA256, extract it, and configure with the documented prefixes.
   Add `--enable-ssl --with-openssl --enable-ssl-crtd --enable-ecap --disable-arch-native` before compiling.
   Run `make -j$(nproc)` and `make install DESTDIR=/var/cache/squid-install`.
@@ -37,6 +37,7 @@ included while still enabling features such as TLS (`--enable-ssl`), OpenSSL int
   Copy the built `/usr` tree from the build stage so every architecture shares the same Squid binaries.
 - **Supervision:** `s6-overlay v3.2.1.0` and `rootfs/etc/services.d/squid` run/log scripts.
   They keep Squid running under `/init`.
+- **Log streaming:** A dedicated `squid-logs` service tails `/var/log/squid/access.log` and `/var/log/squid/cache.log` as `proxy`, ensuring the same lines land in `docker logs` while the files remain on disk for persistence.
 - **Files copied:** `/var/cache/squid-install/usr` includes `/usr/etc` and `/usr/lib`.
   This ensures both `amd64` and `arm64` share the same feature set.
 - **Entry point:** `ENTRYPOINT ["/init"]` launches Squid through the s6 supervision tree.
@@ -47,11 +48,11 @@ All files in the repository must retain LF line endings to avoid Debian variance
 
 ## 3. Build Details
 
-- Squid 6.14 is downloaded from
-  `https://github.com/squid-cache/squid/releases/download/SQUID_6_14/squid-6.14.tar.bz2`.
+- Squid 7.3 is downloaded from
+  `https://github.com/squid-cache/squid/releases/download/SQUID_7_3/squid-7.3.tar.bz2`.
   The file is stored in `/var/cache/squid-build`.
   It is verified against the published SHA256 before extraction.
-  (`cdc6b6c1ed519836bebc03ef3a6ed3935c411b1152920b18a2210731d96fdf67`)
+  (`af7d61cfe8e65a814491e974d3011e5349a208603f406ec069e70be977948437`)
 - The tarball is configured with `--prefix=/usr` and `--localstatedir=/var`.
   It adds `--libexecdir=/usr/lib/squid` and `--with-pidfile=/var/run/squid/squid.pid`.
   It also enables `--disable-arch-native --enable-ssl --with-openssl --enable-ssl-crtd --enable-ecap`.

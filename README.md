@@ -1,6 +1,6 @@
 # digitaldriveio/squid
 
-The `digitaldriveio/squid` project packages a Squid branch 6.14 proxy by
+The `digitaldriveio/squid` project packages a Squid 7.3 proxy by
 compiling it inside a reproducible multi-stage Debian Bookworm pipeline.
 That lets teams distribute a lean, feature-complete Debian Bookworm-slim
 runtime without forcing operators to rebuild Squid. The build then enables TLS,
@@ -10,7 +10,7 @@ runtime image so operators never compile Squid themselves.
 
 ## Features
 
-- Runs a Squid 6.14 proxy (built from source in the build stage) on Debian Bookworm-slim.
+- Runs a Squid 7.3 proxy (built from source in the build stage) on Debian Bookworm-slim.
   Only the runtime libraries that Squid needs (`libssl3`, `libecap3`) are installed so the image stays compact.
 - Squid is compiled with `--with-openssl --enable-ssl-crtd` so the `ssl_crtd` helper and OpenSSL stack needed for `ssl_bump`
   workflows are ready to use; the runtime also ships the `openssl` CLI for generating CAs or certificate directories inside the container.
@@ -34,12 +34,12 @@ docker run \
 Point applications at `http://localhost:3128` (or `http://<container-host>:3128`).
 
 The build accepts `SQUID_VERSION`/`SQUID_TAG` arguments so you can track other
-branch-6 releases if needed:
+branch-7 releases if needed:
 
 ```bash
-docker build --build-arg SQUID_VERSION=6.14 \
-     --build-arg SQUID_TAG=SQUID_6_14 \
-     -t digitaldriveio/squid:6.14 .
+docker build --build-arg SQUID_VERSION=7.3 \
+     --build-arg SQUID_TAG=SQUID_7_3 \
+     -t digitaldriveio/squid:7.3 .
 ```
 
 > **Security note:** the built-in `/etc/squid/squid.conf` covers `_localnet` and allows `http_access` to `localnet`.
@@ -86,6 +86,7 @@ file-based syntax so you retain the full power of ACLs, caching, and helpers.
 - Cache logs: `/var/log/squid/cache.log`
 - Manager interface: `docker exec squid squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` (permitted by the bundled `cachemgr_passwd none info` rule, with every other manager action disabled).
 - Healthcheck: Dockerfile defines `HEALTHCHECK CMD squidclient -h 127.0.0.1 -p 3199 cache_object://127.0.0.1/info` so orchestrators know when Squid is ready. The manager interface listens on `127.0.0.1:3199` while port `3128` continues to serve proxy traffic, preventing Squid from forwarding its own manager requests.
+- The companion `squid-logs` s6 service tails both log files (as the `proxy` user) to stdout so `docker logs` mirrors the persisted `/var/log/squid` contents.
 
 `docker logs squid` shows the same access/cache log lines because the `s6-log`
 service fans them out to stdout while rotating files under `/var/log/squid`.

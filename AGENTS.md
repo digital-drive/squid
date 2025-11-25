@@ -2,8 +2,8 @@
 
 ## Purpose of the Image
 
-This image delivers Squid **branch 6** built atop Debian Bookworm. A dedicated
-build stage compiles the desired Squid 6 release with the required feature
+This image delivers Squid **branch 7** built atop Debian Bookworm. A dedicated
+build stage compiles the desired Squid 7 release with the required feature
 flags, while the runtime stage packages the result on a lightweight Debian
 Bookworm-slim base without forcing users to compile Squid themselves.
 
@@ -13,7 +13,7 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 
 - Based on `debian:bookworm` with `build-essential`, `pkg-config`, `wget`, and
   the dependencies required to compile Squid (OpenSSL, ECAP, Berkeley DB, etc.).
-- Downloads `squid-6.14.tar.bz2` from the GitHub release `SQUID_6_14`, stores it
+- Downloads `squid-7.3.tar.bz2` from the GitHub release `SQUID_7_3`, stores it
   under `/var/cache/squid-build`, and verifies the published SHA256 before
   extraction.
 - Configures Squid with `/usr` prefixes plus `--enable-ssl`, `--with-openssl`,
@@ -37,6 +37,9 @@ Bookworm-slim base without forcing users to compile Squid themselves.
   runtime stage also deploys `s6-overlay v3.2.1.0`, copies the `rootfs/etc/services.d/squid`
   definition (run/log scripts), and runs via `/init` so PID/log dirs are owned by
   `proxy`.
+- Adds a companion `squid-logs` service that tails `/var/log/squid/access.log`
+  and `/var/log/squid/cache.log` (as `proxy`) so Docker stdout stays in sync with
+  the persisted log files.
 - Creates `/var/cache/squid` and `/var/log/squid`, ensures `proxy:proxy`
   ownership, streams Squid logs to Docker stdout via `s6-log`, and runs as the
   unprivileged `proxy` user. The bundled `squid.conf` configures the asynchronous
