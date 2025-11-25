@@ -67,7 +67,7 @@ All files in the repository must retain LF line endings to avoid Debian variance
 - **`squid.conf` override:** Replace `/etc/squid/squid.conf` with a bind-mounted file.
   This lets you control ACLs, cache directives, etc.
 - **Drop-in snippets:** Mount files under `/etc/squid/conf.d/*.conf`; they are appended after the main config.
-- **Cache persistence:** Mount `/var/cache/squid` and ensure Squid owns the directory before starting.
+- **Cache persistence:** Mount `/var/cache/squid` and ensure Squid owns the directory before starting. The baked-in config uses Squid's asynchronous `aufs` store (`cache_dir aufs /var/spool/squid 4096 16 256`) for better concurrency; override `cache_dir` if you need a different store or size.
 - **Log persistence:** Mount `/var/log/squid` to retain access/cache logs outside the container.
   The same streams appear via `docker logs`.
 - **Reload control:** Run `docker exec <name> squid -k reconfigure` to apply config changes without a restart.
