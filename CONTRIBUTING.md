@@ -25,6 +25,10 @@ Thanks for helping improve the Squid container. Follow these guidelines so new f
 - If behaviour changes affect user-facing configuration, update README, DockerHub.md, and AGENTS.md so the guidance remains synchronized.
 - Mention the license (`GPL-3.0-or-later`) in new docs if appropriate; this project already includes a `LICENSE` file covering that.
 
+## Releasing
+
+- This repository uses `release-it` (configured via `.release-it.json`) which triggers `scripts/publish-images.sh` before publishing. When you just want to bump versions or dry-run a release without waiting for the multi-architecture Docker build, export `SKIP_LOCAL_BUILD=1` before running `release-it` (or invoke the script with that variable). The hook detects the flag and skips the local buildx invocation.
+
 ## License
 
 Everything in this repository is distributed under the GNU General Public License version 3 or later (`GPL-3.0-or-later`). Keep the `LICENSE` file up to date if the legal terms ever change.
