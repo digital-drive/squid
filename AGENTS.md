@@ -16,7 +16,8 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 - Downloads `squid-6.14.tar.bz2` from the GitHub release `SQUID_6_14`, stores it
   under `/var/cache/squid-build`, and verifies the published SHA256 before
   extraction.
-- Configures Squid with `/usr` prefixes plus `--enable-ssl` and `--enable-ecap`. When
+- Configures Squid with `/usr` prefixes plus `--enable-ssl`, `--with-openssl`,
+  `--enable-ssl-crtd`, and `--enable-ecap`. When
   the build runs on `linux/amd64`, it adds conservative compiler flags
   (`-march=x86-64 -mtune=generic`) so the binary remains portable across Intel/AMD
   hosts; other architectures skip those flags and fall back to Debian's binary
@@ -26,7 +27,9 @@ Bookworm-slim base without forcing users to compile Squid themselves.
 ### 2. Runtime Stage
 
 - Starts from `debian:bookworm-slim` and installs only the runtime libraries
-- Copies the compiled `/usr` tree (which includes the Squid configuration
+  plus the `openssl` CLI so Squid's `ssl_crtd` helper can initialize certificate
+  stores for `ssl_bump` without extra tooling.
+  - Copies the compiled `/usr` tree (which includes the Squid configuration
   under `/usr/etc`) from the build stage (built under `/var/cache/squid-install`)
   into the final image; cache/log directories are created at runtime. On
   non-`amd64` targets the stage installs Debian's `squid` package so the runtime
@@ -36,7 +39,9 @@ Bookworm-slim base without forcing users to compile Squid themselves.
   `proxy`.
 - Creates `/var/cache/squid` and `/var/log/squid`, ensures `proxy:proxy`
   ownership, streams Squid logs to Docker stdout via `s6-log`, and runs as the
-  unprivileged `proxy` user.
+  unprivileged `proxy` user. The bundled `squid.conf` configures the asynchronous
+  `aufs` cache store so disk I/O happens via helper threads instead of blocking
+  the main worker.
 - Command: `CMD ["/usr/sbin/squid", "-N", "-d1"]` keeps Squid running in the
   foreground so Docker can supervise it directly.
 

@@ -3,15 +3,17 @@
 The `digitaldriveio/squid` project packages a Squid branch 6.14 proxy by
 compiling it inside a reproducible multi-stage Debian Bookworm pipeline.
 That lets teams distribute a lean, feature-complete Debian Bookworm-slim
-runtime without forcing operators to rebuild Squid. The build then enables TLS
-and ECAP support with conservative flags on `amd64` and hardened defaults on
-`arm64`, and copies the binaries into the runtime image so operators never
-compile Squid themselves.
+runtime without forcing operators to rebuild Squid. The build then enables TLS,
+OpenSSL-powered SSL bump helpers, and ECAP support with conservative flags on
+`amd64` and hardened defaults on `arm64`, and copies the binaries into the
+runtime image so operators never compile Squid themselves.
 
 ## Features
 
 - Runs a Squid 6.14 proxy (built from source in the build stage) on Debian Bookworm-slim.
   Only the runtime libraries that Squid needs (`libssl3`, `libecap3`) are installed so the image stays compact.
+- Squid is compiled with `--with-openssl --enable-ssl-crtd` so the `ssl_crtd` helper and OpenSSL stack needed for `ssl_bump`
+  workflows are ready to use; the runtime also ships the `openssl` CLI for generating CAs or certificate directories inside the container.
 - Squid runs in the foreground (`-N -d1`), so Docker/s6 can supervise it while still emitting actionable log lines.
   Restarts happen transparently and keep the log stream consistent.
 - Mounts-friendly: configuration, cache, and log directories can be persisted easily.
@@ -69,7 +71,7 @@ docker exec squid squid -k reconfigure
 - **Listening port:** Publish `3128/tcp` so workloads can reach the proxy.
 - **Squid configuration:** `/etc/squid/squid.conf` contains the defaults we ship (with the healthcheck allowance described above). Override the proxy by mounting a custom `/etc/squid/squid.conf` (read-only) or drop snippets under `/etc/squid/conf.d/`.
   This controls ACLs and caching.
-- **Cache directory:** Persist `/var/cache/squid` to keep caches warm between restarts.
+- **Cache directory:** Persist `/var/cache/squid` to keep caches warm between restarts; the image defaults to Squid's asynchronous `aufs` store (`cache_dir aufs /var/spool/squid ...`) for smoother disk I/O.
 - **Logs:** Mount `/var/log/squid` if host-level log shipping or inspection is needed.
   These same streams also appear via `docker logs`.
 - **Reload control:** Run `squid -k reconfigure` inside the container to apply config changes without restarting Squid.

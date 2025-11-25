@@ -1,5 +1,5 @@
 ---
-github_description: "Squid 6 Bookworm-slim images on amd64/arm64 by compiling branch 6 with TLS/eCAP, bundling s6 supervision, persistence-friendly cache/log volumes, healthchecks, and user guidance so teams can run a complete proxy without rebuilding or managing artifacts, keeping configs file-drive."
+github_description: "Squid 6 Bookworm-slim images on amd64/arm64 by compiling branch 6 with TLS/OpenSSL ssl_crtd/eCAP support, bundling s6 supervision, persistence-friendly cache/log volumes, healthchecks, and user guidance so teams can run a complete proxy without rebuilding or managing artifacts, keeping configs file-drive."
 ---
 
 # SPECIFICATION
@@ -16,8 +16,9 @@ operators can deploy Squid 6 on amd64 or arm64 without compiling or managing
 artifacts themselves.
 
 The multi-stage approach ensures only the required runtime dependencies are
-included while still enabling features such as TLS (`--enable-ssl`) and eCAP
-helpers (`--enable-ecap`).
+included while still enabling features such as TLS (`--enable-ssl`), OpenSSL integration
+(`--with-openssl`), the dynamic certificate helper (`--enable-ssl-crtd`), and eCAP helpers
+(`--enable-ecap`).
 
 ## 2. Components
 
@@ -26,13 +27,13 @@ helpers (`--enable-ecap`).
   `libexpat1-dev`, `libcppunit-dev`, and `libcap-dev`.
 - **Build steps:** Download `squid-6.14.tar.bz2` into `/var/cache/squid-build`.
   Verify the SHA256, extract it, and configure with the documented prefixes.
-  Add `--enable-ssl --enable-ecap --disable-arch-native` before compiling.
+  Add `--enable-ssl --with-openssl --enable-ssl-crtd --enable-ecap --disable-arch-native` before compiling.
   Run `make -j$(nproc)` and `make install DESTDIR=/var/cache/squid-install`.
   `linux/amd64` adds `CFLAGS/CXXFLAGS=-march=x86-64 -mtune=generic`.
   `linux/arm64` uses Debian's hardened defaults.
 - **Runtime base:** `debian:bookworm-slim`.
   It keeps the final image compact.
-- **Runtime deps:** Provide `libssl3` and `libecap3`.
+- **Runtime deps:** Provide `libssl3`, `libecap3`, and the `openssl` CLI for `ssl_bump` certificate workflows.
   Copy the built `/usr` tree from the build stage so every architecture shares the same Squid binaries.
 - **Supervision:** `s6-overlay v3.2.1.0` and `rootfs/etc/services.d/squid` run/log scripts.
   They keep Squid running under `/init`.
@@ -53,7 +54,7 @@ All files in the repository must retain LF line endings to avoid Debian variance
   (`cdc6b6c1ed519836bebc03ef3a6ed3935c411b1152920b18a2210731d96fdf67`)
 - The tarball is configured with `--prefix=/usr` and `--localstatedir=/var`.
   It adds `--libexecdir=/usr/lib/squid` and `--with-pidfile=/var/run/squid/squid.pid`.
-  It also enables `--disable-arch-native --enable-ssl --enable-ecap`.
+  It also enables `--disable-arch-native --enable-ssl --with-openssl --enable-ssl-crtd --enable-ecap`.
 - `linux/amd64` adds `CFLAGS/CXXFLAGS=-march=x86-64 -mtune=generic`.
   Additional flags: `-O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2`.
   `linux/arm64` compiles with Debian’s hardened defaults.
