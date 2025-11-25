@@ -43,6 +43,8 @@ RUN set -eux; \
                 --with-pidfile=/var/run/squid/squid.pid \
                 --disable-arch-native \
                 --enable-ssl \
+                --with-openssl \
+                --enable-ssl-crtd \
                 --enable-ecap; \
     make -j$(nproc); \
     make install DESTDIR=/var/cache/squid-install
@@ -64,6 +66,7 @@ RUN apt-get update \
       tzdata \
       xz-utils \
       procps \
+      openssl \
       libssl3 \
       libgnutls30 \
       libecap3 \
