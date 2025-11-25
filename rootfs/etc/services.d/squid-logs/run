@@ -1,0 +1,11 @@
+#!/command/with-contenv sh
+set -eu
+
+ACCESS_LOG="/var/log/squid/access.log"
+CACHE_LOG="/var/log/squid/cache.log"
+
+# Ensure log files exist so tail -F can attach even on the first boot.
+touch "${ACCESS_LOG}" "${CACHE_LOG}"
+chown proxy:proxy "${ACCESS_LOG}" "${CACHE_LOG}"
+
+exec /command/s6-setuidgid proxy tail -n0 -F "${ACCESS_LOG}" "${CACHE_LOG}"

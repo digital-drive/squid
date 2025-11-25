@@ -115,7 +115,8 @@ RUN set -eux; \
     chmod +x \
         /etc/cont-init.d/10-squid-dirs \
         /etc/services.d/squid/run \
-        /etc/services.d/squid/log/run
+        /etc/services.d/squid/log/run \
+        /etc/services.d/squid-logs/run
 
 VOLUME ["/var/cache/squid", "/var/log/squid"]
 
