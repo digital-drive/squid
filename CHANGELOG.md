@@ -1,6 +1,12 @@
 # CHANGELOG
 
-# [1.2.4](/compare/v1.2.3...v1.2.4) (2025-11-25)
+## [1.3.0](/compare/v1.2.4...v1.3.0) (2025-11-25)
+
+### Features
+
+* upgrade Squid from version 6.14 to 7.3 across documentation and configuration files
+
+## [1.2.4](/compare/v1.2.3...v1.2.4) (2025-11-25)
 
 ### Bug Fixes
 
